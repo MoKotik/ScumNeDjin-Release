@@ -5657,7 +5657,7 @@ bool WargmJsonLooksLikeError(const std::string& json) {
 
 std::string WargmApiUrl(const std::string& endpoint, const std::vector<std::pair<std::string, std::string>>& query) {
     std::ostringstream url;
-    url << "https://api.wargm.ru/v1/" << endpoint << "?";
+    url << "https://api.wargm.ru/v1.1/" << endpoint << "?";
     bool first = true;
     for (const auto& pair : query) {
         if (TrimAscii(pair.second).empty()) continue;
@@ -5697,9 +5697,6 @@ std::string WargmSyncJson(const std::wstring& baseDir) {
     };
     const auto filter = JsonScalarAny(config, { "DeliveryFilter", "deliveryFilter" });
     if (!filter.empty()) query.push_back({ "delivery", filter });
-    const int serverId = JsonIntField(config, "WargmServerId", JsonIntField(config, "wargmServerId", 0));
-    if (serverId > 0) query.push_back({ "server_id", std::to_string(serverId) });
-
     const int timeoutSeconds = std::clamp(JsonIntField(config, "HttpTimeoutSeconds", 20), 3, 60);
     const auto http = HttpGetText(WargmApiUrl("shop/operations", query), timeoutSeconds);
     if (!http.ok) {
@@ -5845,7 +5842,6 @@ std::string WargmConfirmDeliveredJson(const std::wstring& baseDir) {
     int scanned = 0;
     int acked = 0;
     int failed = 0;
-    const int serverId = JsonIntField(config, "WargmServerId", JsonIntField(config, "wargmServerId", 0));
     for (const auto& row : delivered) {
         ++scanned;
         const auto key = JsonScalarField(row, "key");
@@ -5864,7 +5860,6 @@ std::string WargmConfirmDeliveredJson(const std::wstring& baseDir) {
             { "client", std::to_string(projectId) + ":" + TrimAscii(apiKey) },
             { "operation_id", opId }
         };
-        if (serverId > 0) query.push_back({ "server_id", std::to_string(serverId) });
         const auto http = HttpGetText(WargmApiUrl(endpoint, query), std::clamp(JsonIntField(config, "HttpTimeoutSeconds", 20), 3, 60));
         if (http.ok && !WargmJsonLooksLikeError(http.body)) {
             ++acked;
