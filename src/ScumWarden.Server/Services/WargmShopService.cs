@@ -14,7 +14,7 @@ public sealed class WargmShopService
     {
         _http = http;
         _store = store;
-        _http.BaseAddress ??= new Uri("https://api.wargm.ru/v1/");
+        _http.BaseAddress ??= new Uri("https://api.wargm.ru/v1.1/");
         _http.Timeout = TimeSpan.FromSeconds(20);
     }
 
@@ -186,12 +186,6 @@ public sealed class WargmShopService
             query["delivery"] = filter;
         }
 
-        var serverId = Int(config, "WargmServerId", 0);
-        if (serverId > 0)
-        {
-            query["server_id"] = serverId.ToString(CultureInfo.InvariantCulture);
-        }
-
         var url = "shop/operations?" + string.Join("&", query
             .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
             .Select(pair => $"{Uri.EscapeDataString(pair.Key)}={Uri.EscapeDataString(pair.Value!)}"));
@@ -225,12 +219,6 @@ public sealed class WargmShopService
             ["client"] = $"{projectId}:{apiKey.Trim()}",
             ["operation_id"] = operationId
         };
-
-        var serverId = Int(config, "WargmServerId", 0);
-        if (serverId > 0)
-        {
-            query["server_id"] = serverId.ToString(CultureInfo.InvariantCulture);
-        }
 
         var url = endpoint + "?" + string.Join("&", query
             .Where(pair => !string.IsNullOrWhiteSpace(pair.Value))
